@@ -1,0 +1,3 @@
+fastapi~=0.110.1
+firebase_admin
+uvicorn[standard]
