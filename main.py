@@ -108,3 +108,8 @@ async def login(user_details: dict):
         return {"token": token}
     else:
         return {"error": "Invalid email or password!"}
+
+
+@app.get("/teszt")
+async def teszt():
+    return "ok"
