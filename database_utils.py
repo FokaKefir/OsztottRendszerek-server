@@ -98,10 +98,9 @@ def check_form_completed(form_id: str, user_id: str) -> bool:
     submits = submits_ref.where(filter=form_filter).where(filter=user_filter).stream()  
 
     # check if user already submitted the form
-    for submit in submits:
-        if submit.to_dict()['user_id'] == user_id:
-            return True
-
+    if len(list(submits)) > 0:
+        return True
+   
     return False
 
 # login user then return user_id
@@ -116,4 +115,3 @@ def login_user(email: str, password: str) -> str:
             return user.id
 
     return None
-
