@@ -1,99 +1,80 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, Header
+import database_utils as dbu
+from jose import JWTError, jwt
+from pydantic import BaseModel
+from datetime import datetime, timedelta
+
 
 app = FastAPI()
 
-forms = {
-    "form1": {
-        "title": "Sample Form",
-        "desc": "This is a sample form.",
-        "options": ["Option 1", "Option 2", "Option 3"]
-    }
-}
 
-
-@app.get("/get_form_data")
-async def get_form_data(auth: str, form_id: str):
-    if auth != "token":
+@app.get("/form/get_form_data")
+async def get_form_data(auth: str = Header(...), form_id: str = Header(...)):
+    if verify_token(auth) == -1:
         return {"error": "Unauthorized access"}
-    return forms[form_id]
+    return dbu.get_form(form_id)
 
 
-created_forms = {}
-
-
-@app.post("/create_form")
-async def create_form(auth: str, form_data: dict = Body(...)):
-    if auth != "token":
+@app.post("/form/create_form")
+async def create_form(auth: str = Header(...), form_data: dict = Body(...)):
+    if verify_token(auth) == -1:
         return {"error": "Unauthorized access"}
-    required_fields = ["title", "desc", "opt"]
-    for field in required_fields:
-        if field not in form_data:
-            return {"error": f"Missing required field: {field}"}
-
-    form_id = len(created_forms) + 1
-    created_forms[form_id] = form_data
-
-    return {"form_id": form_id}
+    form_id = dbu.create_form(form_data)
+    return dbu.get_form(form_id)
 
 
-form_submissions = {
-    "form1": [
-        {"name": "pizza", "value": 1},
-        {"name": "hamburger", "value": 0},
-        {"name": "chocolate", "value": 0}
-    ],
-    "form2": [
-        {"name": "pizza", "value": 0},
-        {"name": "hamburger", "value": 1},
-        {"name": "chocolate", "value": 0}
-    ]
-}
-
-
-@app.get("/get_form_submission")
-async def get_form_submission(auth: str, form_id: str):
-    if auth != "token":
+@app.get("/form/get_form_submissions")
+async def get_form_submissions(auth: str = Header(...), form_id: str = Header(...)):
+    if verify_token(auth) == -1:
         return {"error": "Unauthorized access"}
-
-    if form_id not in form_submissions:
-        return {"error": "Form not found"}
-
-    return form_submissions[form_id]
+    return dbu.get_form_submissions(form_id)
 
 
-users_db = {}
+@app.put("/form/change_form_status")
+async def change_form_status(status: bool, auth: str = Header(...), form_id: str = Header(...)):
+    if verify_token(auth) == -1:
+        return {"error": "Unauthorized access"}
+    dbu.change_form_status(form_id, status)
 
 
-@app.post("/register")
+@app.post("/form/submit")
+async def submit(form_id: str, options: list, auth: str = Header(...)):
+    if verify_token(auth) == -1:
+        return {"error": "Unauthorized access"}
+    user_id = verify_token(auth)
+    if dbu.create_submission(form_id, user_id['user_id'], options):
+        return "Successful submission!"
+    return "Unsuccessful submission!"
+
+
+@app.get("/form/check_form_completed")
+async def check_form_completed(form_id: str, auth: str = Header(...)):
+    if verify_token(auth) == -1:
+        return {"error": "Unauthorized access"}
+    user_id = verify_token(auth)
+    if dbu.check_form_completed(form_id, user_id['user_id']):
+        return True
+    return False
+
+
+@app.post("/auth/register")
 async def register(user_details: dict):
     if "name" not in user_details:
         return {"error": "Name is required"}
     elif "email" not in user_details:
         return {"error": "E-mail is required"}
-    elif "phone" not in user_details:
-        return {"error": "Phone is required"}
     elif "pass" not in user_details:
         return {"error": "Password is required"}
-    elif "role" not in user_details:
-        return {"error": "Role is required"}
 
-    token = generate_token(user_details["email"])
+    user_id = dbu.register_user(user_details)
+    data = {
+        'user_id': user_id
+    }
 
-    users_db[user_details["email"]] = user_details
-
-    return {"token": token}
-
-
-def generate_token(email):
-    return email + "_token"
+    return get_token(data)
 
 
-users_db1 = {
-    "emejl": {"pass": "example_password"}
-}
-
-
-@app.post("/login")
+@app.post("/auth/login")
 async def login(user_details: dict):
     if "email" not in user_details:
         return {"error": "E-mail is required"}
@@ -102,14 +83,48 @@ async def login(user_details: dict):
 
     email = user_details["email"]
     passw = user_details["pass"]
-
-    if email in users_db1 and users_db1[email]["pass"] == passw:
-        token = generate_token(email)
-        return {"token": token}
-    else:
-        return {"error": "Invalid email or password!"}
+    user_id = dbu.login_user(email, passw)
+    data = {'user_id': user_id}
+    if user_id:
+        return get_token(data)
+    return "Unsuccessful login!"
 
 
 @app.get("/teszt")
 async def teszt():
     return "ok"
+
+
+SECRET_KEY = "c8a7f2bcb3eae031d9ac9b6cf439ff85d32a86c1d26bc05ae8fe4a0b4697e35d"
+
+# encryption algorithm
+ALGORITHM = "HS256"
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+
+    expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+    return encoded_jwt
+
+
+def get_token(data: dict):
+    # data to be signed using token
+    token = create_access_token(data=data)
+    return {'token': token}
+
+
+def verify_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        return -1
