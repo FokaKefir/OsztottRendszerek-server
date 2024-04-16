@@ -30,11 +30,11 @@ def register_user(user: dict) -> str:
     return new_user_ref.id
     
 # create a new submission then return its id
-def create_submission(form_id: str, user_id: str, options: list) -> str:
+def create_submission(short_id: str, user_id: str, options: list) -> str:
     # create document dictionary
     submit = {
         'user_id': user_id,
-        'form_id': form_id,
+        'short_id': short_id,
         'options': options
     }
 
@@ -51,18 +51,25 @@ def create_form(form: dict) -> str:
         form['active'] = True
 
     # add shortId
-    form['shortId'] = str(uuid4())[:6]
+    form['short_id'] = str(uuid4())[:6]
 
     # add form to the forms collection
     _, new_form_ref = forms_ref.add(form)
 
     # return new form's uid
-    return new_form_ref.id
+    return form['short_id']
 
 # change the status of the form by it's id
-def change_form_status(form_id: str, status: bool) -> None:
+def change_form_status(short_id: str, status: bool) -> None:
     # get form reference by form_id
-    form_ref = forms_ref.document(form_id)
+    form_filter = FieldFilter('short_id','==',short_id)
+    forms = forms_ref.where(filter=form_filter).stream()
+
+    # get snapshot of the form
+    form_snap = next(forms, None)
+
+    # get reference of the form
+    form_ref = forms_ref.document(form_snap.id)
 
     # update document
     form_ref.update({'active': status})
@@ -70,10 +77,10 @@ def change_form_status(form_id: str, status: bool) -> None:
 
 
 # get form data by it's id
-def get_form(shortId: str) -> dict:
+def get_form(short_id: str) -> dict:
     # get form reference by form_id
 
-    form_filter = FieldFilter('shortId','==',shortId)
+    form_filter = FieldFilter('short_id','==',short_id)
     forms = forms_ref.where(filter=form_filter).stream()
 
     # get the first element (it should have only one)
