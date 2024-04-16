@@ -3,9 +3,22 @@ import database_utils as dbu
 from jose import JWTError, jwt
 from pydantic import BaseModel
 from datetime import datetime, timedelta
+from fastapi.middleware.cors import CORSMiddleware
 
+origins = [
+    "*"
+]
 
 app = FastAPI()
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/form/get_form_data")
