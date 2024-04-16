@@ -63,7 +63,7 @@ async def register(user_details: dict):
         return {"error": "Name is required"}
     elif "email" not in user_details:
         return {"error": "E-mail is required"}
-    elif "pass" not in user_details:
+    elif "password" not in user_details:
         return {"error": "Password is required"}
 
     user_id = dbu.register_user(user_details)
@@ -78,11 +78,11 @@ async def register(user_details: dict):
 async def login(user_details: dict):
     if "email" not in user_details:
         return {"error": "E-mail is required"}
-    elif "pass" not in user_details:
+    elif "password" not in user_details:
         return {"error": "Password is required"}
 
     email = user_details["email"]
-    passw = user_details["pass"]
+    passw = user_details["password"]
     user_id = dbu.login_user(email, passw)
     data = {'user_id': user_id}
     if user_id:
