@@ -70,13 +70,17 @@ def change_form_status(form_id: str, status: bool) -> None:
 
 
 # get form data by it's id
-def get_form(form_id: str) -> dict:
+def get_form(shortId: str) -> dict:
     # get form reference by form_id
-    form_ref = forms_ref.document(form_id)
+
+    form_filter = FieldFilter('shortId','==',shortId)
+    forms = forms_ref.where(filter=form_filter).stream()
+
+    # get the first element (it should have only one)
+    form = next(forms, None)
 
     # get form data
-    form_data = form_ref.get().to_dict()
-    return form_data
+    return form.to_dict() if form else None
 
 # get options and their count for a form
 def get_form_submissions(form_id: str) -> dict:
@@ -120,3 +124,16 @@ def login_user(email: str, password: str) -> str:
             return user.id
 
     return None
+
+# get all forms id
+def all_forms_id() -> list:
+    # get all forms
+    forms = forms_ref.stream()
+    
+    # get the ids
+    all_forms_id = []
+    for form in forms:
+        all_forms_id.append(form.to_dict()['shortId'])
+        
+    return all_forms_id
+
