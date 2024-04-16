@@ -31,7 +31,7 @@ async def get_form_submissions(auth: str = Header(...), form_id: str = Header(..
 
 
 @app.put("/form/change_form_status")
-async def change_form_status(status: bool, auth: str = Header(...), form_id: str = Header(...)):
+async def change_form_status(status: bool = Header(...), auth: str = Header(...), form_id: str = Header(...)):
     if verify_token(auth) == -1:
         return {"error": "Unauthorized access"}
     dbu.change_form_status(form_id, status)
