@@ -31,7 +31,7 @@ async def get_form_submissions(auth: str = Header(...), form_id: str = Header(..
 
 
 @app.put("/form/change_form_status")
-async def change_form_status(status: bool, auth: str = Header(...), form_id: str = Header(...)):
+async def change_form_status(status: bool = Header(...), auth: str = Header(...), form_id: str = Header(...)):
     if verify_token(auth) == -1:
         return {"error": "Unauthorized access"}
     dbu.change_form_status(form_id, status)
@@ -63,7 +63,7 @@ async def register(user_details: dict):
         return {"error": "Name is required"}
     elif "email" not in user_details:
         return {"error": "E-mail is required"}
-    elif "pass" not in user_details:
+    elif "password" not in user_details:
         return {"error": "Password is required"}
 
     user_id = dbu.register_user(user_details)
@@ -78,11 +78,11 @@ async def register(user_details: dict):
 async def login(user_details: dict):
     if "email" not in user_details:
         return {"error": "E-mail is required"}
-    elif "pass" not in user_details:
+    elif "password" not in user_details:
         return {"error": "Password is required"}
 
     email = user_details["email"]
-    passw = user_details["pass"]
+    passw = user_details["password"]
     user_id = dbu.login_user(email, passw)
     data = {'user_id': user_id}
     if user_id:
@@ -109,7 +109,7 @@ class Token(BaseModel):
 def create_access_token(data: dict):
     to_encode = data.copy()
 
-    expire = datetime.utcnow() + timedelta(minutes=15)
+    expire = datetime.utcnow() + timedelta(minutes=60)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
