@@ -65,13 +65,13 @@ async def register(user_details: dict):
         return {"error": "E-mail is required"}
     elif "password" not in user_details:
         return {"error": "Password is required"}
-    return "ok"
-    # user_id = dbu.register_user(user_details)
-    # data = {
-    #     'user_id': user_id
-    # }
 
-    #return get_token(data)
+    user_id = dbu.register_user(user_details)
+    data = {
+        'user_id': user_id
+    }
+
+    return get_token(data)
 
 
 @app.post("/auth/login")
