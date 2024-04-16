@@ -1,6 +1,8 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1 import FieldFilter
+from uuid import uuid4
+
 
 # load credentials for firebase
 cred = credentials.Certificate('forms_key.json')
@@ -47,6 +49,9 @@ def create_form(form: dict) -> str:
     # set default active value for the form
     if 'active' not in form.keys():
         form['active'] = True
+
+    # add shortId
+    form['shortId'] = str(uuid4())[:6]
 
     # add form to the forms collection
     _, new_form_ref = forms_ref.add(form)
