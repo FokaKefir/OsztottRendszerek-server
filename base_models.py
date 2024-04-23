@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class Login(BaseModel):
     email: str
     password: str
@@ -21,7 +22,3 @@ class FormCreation(BaseModel):
     desc: str
     options: list
     active: bool
-
-
-class FormCompleted(BaseModel):
-    form_id: str

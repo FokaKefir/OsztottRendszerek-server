@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
 import base_models as bm
 
+
 origins = [
     "http://localhost:4200",
     "http://localhost",
@@ -79,14 +80,14 @@ async def submit(data: bm.Submission, auth: str = Header(...)):
 
 
 @app.get("/form/check_form_completed")
-async def check_form_completed(form_id: bm.FormCompleted, auth: str = Header(...)):
+async def check_form_completed(form_id: str = Header(...), auth: str = Header(...)):
     if verify_token(auth) == -1:
         return {"error": "Unauthorized access"}
 
-    form_id = form_id.dict()
+    form_id = form_id
     user_id = verify_token(auth)
 
-    if dbu.check_form_completed(form_id['form_id'], user_id['user_id']):
+    if dbu.check_form_completed(form_id, user_id['user_id']):
         return True
     return False
 

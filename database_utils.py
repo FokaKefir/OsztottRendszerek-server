@@ -92,7 +92,7 @@ def get_form(short_id: str) -> dict:
 # get options and their count for a form
 def get_form_submissions(form_id: str) -> dict:
     # get all submits of the form
-    submit_filter = FieldFilter('form_id','==',form_id)
+    submit_filter = FieldFilter('short_id','==',form_id)
     submits = submits_ref.where(filter=submit_filter).stream()
 
     option_values={}
@@ -109,7 +109,7 @@ def get_form_submissions(form_id: str) -> dict:
 #check if the form is completed by the user
 def check_form_completed(form_id: str, user_id: str) -> bool:
     # get all submits of the form
-    form_filter = FieldFilter('form_id','==',form_id)
+    form_filter = FieldFilter('short_id','==',form_id)
     user_filter = FieldFilter('user_id','==',user_id)
     submits = submits_ref.where(filter=form_filter).where(filter=user_filter).stream()  
 
