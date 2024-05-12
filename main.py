@@ -92,11 +92,24 @@ async def check_form_completed(form_id: str = Header(...), auth: str = Header(..
     return False
 
 
+@app.get("/form/get_all_forms_id")
+async def get_all_forms_id(auth: str = Header(...)):
+    if verify_token(auth) == -1:
+        return {"error": "Unauthorized access"}
+    form_ids = dbu.all_forms_id()
+
+    return form_ids
+
+
 @app.post("/auth/register")
 async def register(user_details: bm.Register):
     user_details = user_details.dict()
 
     user_id = dbu.register_user(user_details)
+
+    if not user_id:
+        return "Unsuccessful registration!"
+
     data = {
         'user_id': user_id
     }
