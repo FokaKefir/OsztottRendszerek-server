@@ -104,6 +104,15 @@ async def get_all_forms_id(auth: str = Header(...)):
 @app.post("/auth/register")
 async def register(user_details: bm.Register):
     user_details = user_details.dict()
+    name = user_details["name"]
+    email = user_details["email"]
+    password = user_details["password"]
+    if name == "":
+        return "No name found!"
+    if email == "":
+        return "No email found!"
+    if password == "":
+        return "No password found!"
 
     user_id = dbu.register_user(user_details)
 
@@ -123,7 +132,10 @@ async def login(user_details: bm.Login):
 
     email = user_details['email']
     passw = user_details['password']
-
+    if email == "":
+        return "No email found!"
+    if passw == "":
+        return "No password found!"
     user_id = dbu.login_user(email, passw)
     data = {'user_id': user_id}
     if user_id:
