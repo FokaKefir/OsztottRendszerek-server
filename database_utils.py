@@ -133,14 +133,13 @@ def login_user(email: str, password: str) -> str:
     return None
 
 # get all forms id
-def all_forms_id() -> list:
+def all_forms_id() -> dict:
     # get all forms
     forms = forms_ref.stream()
     
     # get the ids
-    all_forms_id = []
+    all_forms_id = {}
     for form in forms:
-        all_forms_id.append(form.to_dict()['shortId'])
+        all_forms_id[form.to_dict()['short_id']] = form.to_dict()['name']
         
     return all_forms_id
-
