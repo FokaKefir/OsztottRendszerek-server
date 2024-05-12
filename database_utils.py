@@ -23,6 +23,21 @@ def register_user(user: dict) -> str:
     if 'role' not in user.keys():
         user['role'] = 'user'
 
+    # get name and email
+    user_name = user['name']
+    user_email = user['email']
+
+    # get all users
+    users = users_ref.stream()
+
+    # check if user exists
+    for u in users:
+        user_data = u.to_dict()
+
+        # if email or name is already used return None
+        if user_data['email'] == user_email or user_data['name'] == user_name:
+            return None 
+
     # add user to users collection
     _, new_user_ref = users_ref.add(user)
 
