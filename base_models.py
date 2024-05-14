@@ -18,7 +18,7 @@ class Submission(BaseModel):
 
 
 class FormCreation(BaseModel):
-    title: str
+    name: str
     desc: str
     options: list
     active: bool
