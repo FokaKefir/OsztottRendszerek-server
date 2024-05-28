@@ -4,7 +4,7 @@ import queue
 import time
 import datetime
 
-PORT = 80
+PORT = 4144
 IP = socket.gethostname()
 DATA_SIZE = 1024  # Byteban
 
@@ -37,7 +37,7 @@ def write_to_file():
 
 
 def listener(client_socket: socket.socket, addr):
-    data = client_socket.recv(DATA_SIZE).encode()
+    data = client_socket.recv(DATA_SIZE).decode()
     if not data:
         client_socket.close()
         return
@@ -50,7 +50,7 @@ def listener(client_socket: socket.socket, addr):
 
 def start_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((HOST, PORT))
+    server_socket.bind((IP, PORT))
     server_socket.listen(100)
     print('Server started on IP:'+IP+', Port:'+str(PORT))
 
@@ -60,3 +60,13 @@ def start_server():
         client_socket, addr = server_socket.accept()
         threading.Thread(target=listener, args=(client_socket, addr)).start()
 
+
+def test_msg(message):
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        client_socket.connect((IP, PORT))
+        client_socket.sendall(message.encode())
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        client_socket.close()
