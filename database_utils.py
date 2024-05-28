@@ -2,6 +2,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1 import FieldFilter
 from uuid import uuid4
+import hashlib
 
 
 # load credentials for firebase
@@ -26,6 +27,9 @@ def register_user(user: dict) -> str:
     # get name and email
     user_name = user['name']
     user_email = user['email']
+
+    # hash password
+    user['password'] = hash_password(user['password'])
 
     # get all users
     users = users_ref.stream()
@@ -142,7 +146,7 @@ def login_user(email: str, password: str) -> str:
     # check if user exists
     for user in users:
         user_data = user.to_dict()
-        if user_data['email'] == email and user_data['password'] == password:
+        if user_data['email'] == email and compare_password(password, user_data['password']):
             return user.id
 
     return None
@@ -158,3 +162,13 @@ def all_forms_id() -> dict:
         all_forms_id[form.to_dict()['short_id']] = form.to_dict()['name']
         
     return all_forms_id
+
+def hash_password(password: str) -> str:
+    pwdhash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+    return pwdhash
+
+def compare_password(input_password: str, db_password: str) -> bool:
+  pwd = hash_password(input_password)
+  if pwd == db_password:
+    return True
+  return False
